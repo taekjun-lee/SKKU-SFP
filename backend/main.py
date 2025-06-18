@@ -36,7 +36,7 @@ app.add_middleware(
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CSV_PATH = os.path.join(BASE_DIR, "../frontend/public/sensor.csv")
-JSON_DIR = BASE_DIR
+JSON_DIR = os.path.join(BASE_DIR, "data")
 
 def load_csv():
     if not os.path.exists(CSV_PATH):

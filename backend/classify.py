@@ -120,7 +120,7 @@ df_train['tsne_2'] = X_2d[:, 1]
 save_cols = ['tsne_1', 'tsne_2'] + cluster_cols
 tsne_cluster_data = df_train[save_cols].to_dict(orient='records')
 
-with open('tsne_cluster_points.json', 'w', encoding='utf-8') as f:
+with open('data/tsne_cluster_points.json', 'w', encoding='utf-8') as f:
     json.dump(tsne_cluster_data, f, indent=2, ensure_ascii=False)
 
 # 모델 평가
@@ -175,7 +175,7 @@ clustering_scores = {
     }
 }
 
-with open('clustering_scores.json', 'w', encoding='utf-8') as f:
+with open('data/clustering_scores.json', 'w', encoding='utf-8') as f:
     json.dump(clustering_scores, f, indent=2, ensure_ascii=False)
 
 # Summay 저장
@@ -209,5 +209,5 @@ summary = summary[['case_id', 'cluster_mode', 'is_new_cluster', 'is_new_cluster_
 summary.columns = ['case_id', 'kmeans_cluster3', 'is_new_cluster', 'is_new_cluster_highpercent', 'timestamp']
 
 result_json = summary.to_dict(orient='records')
-with open('kmeans_cluster_summary.json', 'w', encoding='utf-8') as f:
+with open('data/kmeans_cluster_summary.json', 'w', encoding='utf-8') as f:
     json.dump(result_json, f, indent=2, ensure_ascii=False)

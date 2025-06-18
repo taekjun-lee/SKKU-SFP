@@ -90,7 +90,7 @@ xgb_model.fit(X_train.reshape(X_train.shape[0], -1), y_train)
 y_pred = xgb_model.predict(X_test.reshape(X_test.shape[0], -1))
 y_pred_xgb=y_pred
 
-xgb_model.save_model("xgb_model.json")
+xgb_model.save_model("data/xgb_model.json")
 
 report_xgb = classification_report(
     y_test, y_pred, target_names=['NORMAL', 'RECOVERING', 'BROKEN'], output_dict=True
@@ -120,7 +120,7 @@ y_pred = lgbm_model.predict(
 )
 y_pred_lgbm=y_pred
 
-lgbm_model.booster_.save_model("lgbm_model.txt")
+lgbm_model.booster_.save_model("data/lgbm_model.txt")
 
 report_lgbm = classification_report(
     y_test, y_pred, target_names=['NORMAL', 'RECOVERING', 'BROKEN'], output_dict=True
@@ -166,7 +166,7 @@ y_pred = np.argmax(y_pred_proba, axis=1)
 y_true = np.argmax(y_test_cnn, axis=1)
 y_pred_cnn=y_pred
 
-cnn_model.save("cnn_model.h5")
+cnn_model.save("data/cnn_model.h5")
 
 report_cnn = classification_report(
     y_true, y_pred, target_names=['NORMAL', 'RECOVERING', 'BROKEN'], output_dict=True
@@ -206,7 +206,7 @@ y_pred = np.argmax(y_pred_proba, axis=1)
 y_true = np.argmax(y_test_lstm, axis=1)
 y_pred_lstm=y_pred
 
-lstm_model.save("lstm_model.h5")
+lstm_model.save("data/lstm_model.h5")
 
 report_lstm = classification_report(
     y_true, y_pred, target_names=['NORMAL', 'RECOVERING', 'BROKEN'], output_dict=True
@@ -226,7 +226,7 @@ f1_scores_dict = {
     "data": f1_scores.values.tolist()
 }
 
-with open("f1_scores.json", "w") as f:
+with open("data/f1_scores.json", "w") as f:
     json.dump(f1_scores_dict, f, indent=2)
 
 # 전체 예측 결과 차트로 비교
@@ -250,7 +250,7 @@ result_df = pd.DataFrame({
     "1D-CNN": y_pred_cnn.tolist(),
     "LSTM": y_pred_lstm.tolist()
 })
-result_df.to_json("prediction_results.json", orient="records", indent=2)
+result_df.to_json("data/prediction_results.json", orient="records", indent=2)
 
 # RECOVERING 시점 데이터
 train_timestamps = train_data.index.to_series().reset_index(drop=True)
@@ -265,5 +265,5 @@ recovering_regions = [{
     "recovering_timestamps": all_rec_times
 }]
 
-with open("recovering_regions.json", "w", encoding="utf-8") as f:
+with open("data/recovering_regions.json", "w", encoding="utf-8") as f:
     json.dump(recovering_regions, f, indent=2, ensure_ascii=False)

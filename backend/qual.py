@@ -177,7 +177,7 @@ combined = {
     "details": sensor_mses
 }
 
-with open("combined_mse.json", "w") as f:
+with open("data/combined_mse.json", "w") as f:
     json.dump(combined, f, indent=2)
 
 
@@ -207,7 +207,7 @@ gru_trend_model.fit(
     callbacks=[early_stop],
     verbose=1
 )
-gru_trend_model.save("gru_trend_model.h5")
+gru_trend_model.save("data/gru_trend_model.h5")
 
 # BiLSTM
 bilstm_trend_model = Sequential([
@@ -226,7 +226,7 @@ bilstm_trend_model.fit(
     callbacks=[early_stop],
     verbose=1
 )
-bilstm_trend_model.save("bilstm_trend_model.h5")
+bilstm_trend_model.save("data/bilstm_trend_model.h5")
 
 # LSTM
 lstm_trend_model = Sequential([
@@ -245,7 +245,7 @@ lstm_trend_model.fit(
     callbacks=[early_stop],
     verbose=1
 )
-lstm_trend_model.save("lstm_trend_model.h5")
+lstm_trend_model.save("data/lstm_trend_model.h5")
 
 # GRU, BiLSTM, LSTM 학습 평가
 models_info = {
@@ -300,7 +300,7 @@ output_json = {
     "summary": avg_summary
 }
 
-with open("model_metrics_comparison.json", "w", encoding="utf-8") as f:
+with open("data/model_metrics_comparison.json", "w", encoding="utf-8") as f:
     json.dump(output_json, f, indent=2, ensure_ascii=False)
 
 gru_df = all_metrics["GRU"][["Sensor", "MSE", "MAE", "R2"]].copy()
@@ -309,11 +309,11 @@ gru_metric_output = {
     "details": gru_df.to_dict(orient="records")
 }
 
-with open("gru_metric.json", "w", encoding="utf-8") as f:
+with open("data/gru_metric.json", "w", encoding="utf-8") as f:
     json.dump(gru_metric_output, f, indent=2, ensure_ascii=False)
 
 # 예측 트렌드 저장 (GRU) - test구간 이후 시점 포함
-gru_trend_model = load_model("gru_trend_model.h5", compile=False)
+gru_trend_model = load_model("data/gru_trend_model.h5", compile=False)
 
 X_init = train_data[sensor_cols].values[-60:]
 X_window = X_init.copy()
@@ -357,6 +357,6 @@ for i, sensor in enumerate(sensor_cols):
     }
     results.append(result)
 
-with open("gru_forecast.json", "w", encoding="utf-8") as f:
+with open("data/gru_forecast.json", "w", encoding="utf-8") as f:
     json.dump(results, f, indent=2, ensure_ascii=False)
 
