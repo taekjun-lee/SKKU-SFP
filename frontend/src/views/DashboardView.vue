@@ -12,11 +12,13 @@
       <riskanalysis/>
     </div>
     <div class="algorithm">
-      <algorithm/>
+      <algorithm :selectedSensor="selectedSensor" />
     </div>
+    <!--
     <div class="maint">
       <maintanalysis/>
     </div>
+    -->
   </div>
 </template>
 
@@ -25,7 +27,7 @@ import { ref } from 'vue'
 import QualityChart from '../components/QualityChart.vue'
 import ParameterInfo from '../components/ParameterInfo.vue'
 import riskanalysis from '../components/riskanalysis.vue'
-import maintanalysis from '../components/maintanalysis.vue'
+//import maintanalysis from '../components/maintanalysis.vue'
 import algorithm from '../components/algorithm.vue'
 const selectedSensor = ref('')
 </script>
@@ -36,7 +38,7 @@ const selectedSensor = ref('')
 .dashboard-grid {
   display: grid;
   grid-template-columns: 300px 450px 450px 450px;
-  grid-template-rows: auto 450px auto 180px 180px;
+  grid-template-rows: auto 450px auto 178px 178px;
   gap: 6px;
 }
 
@@ -76,16 +78,7 @@ const selectedSensor = ref('')
 
 .risk {
   grid-column: 1 / 4;
-  grid-row: 4 / 5;
-  background-color: white;
-  padding: 6px;
-  border-radius: 8px;
-  text-align: center;
-}
-
-.maint {
-  grid-column: 1 / 4;
-  grid-row: 5 / 6;
+  grid-row: 4 / 6;
   background-color: white;
   padding: 6px;
   border-radius: 8px;

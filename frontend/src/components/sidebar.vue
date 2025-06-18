@@ -1,15 +1,15 @@
 <template>
   <div class="sidebar">
-    <router-link to="/contents" class="title-link">
+    <router-link to="/dashboard" class="title-link">
       <h2 class="title">SFP-PJT</h2>
     </router-link>
 
     <ul class="nav">
+      <li><router-link to="/dashboard">📊 Dashboard</router-link></li>
       <li><router-link to="/contents">📘 프로젝트 개요</router-link></li>
       <li><router-link to="/dataset">📂 활용 데이터</router-link></li>
-      <li><router-link to="/algorithm">🧪 알고리즘 비교</router-link></li>
-      <li><router-link to="/dashboard">📊 Dashboard</router-link></li>
-      <li><router-link to="/code">💻 활용 코드</router-link></li>
+      <li><router-link to="/algorithm">🧪 모델 비교</router-link></li>
+      <!--<li><router-link to="/code">💻 활용 코드</router-link></li>-->
     </ul>
   </div>
 </template>

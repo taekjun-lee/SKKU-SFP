@@ -1,5 +1,14 @@
 fastapi
 uvicorn
 pandas
+numpy
+scikit-learn
+scipy
+tqdm
+seaborn
+matplotlib
+optuna
+lightgbm
+xgboost
 python-multipart
 python-dateutil>=2.8.2

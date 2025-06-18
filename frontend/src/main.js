@@ -3,6 +3,18 @@ import './style.css'
 import App from './App.vue'
 import router from './router'
 
-createApp(App)
-  .use(router)
-  .mount('#app')
+import 'highlight.js/styles/vs2015.css'
+import hljs from 'highlight.js'
+
+const app = createApp(App)
+
+app.directive('highlight', {
+  mounted(el) {
+    const blocks = el.querySelectorAll('pre code')
+    blocks.forEach((block) => {
+      hljs.highlightElement(block)
+    })
+  }
+})
+
+app.use(router).mount('#app')
