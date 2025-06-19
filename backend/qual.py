@@ -71,116 +71,6 @@ def create_sensor_trend_windows(data, sensor_cols, window_size=60, step=1):
 X_train, y_train = create_sensor_trend_windows(train_data, sensor_cols)
 X_test, y_test = create_sensor_trend_windows(test_data, sensor_cols)
 
-# 데이터 축소 (10% 샘플링)
-# 아래의 약식 평가는 실제 웹 배포 시 불필요 (이미 모델 선정 완료했을테니)
-# 프로젝트 발표를 위해 비교군 모델에 대한 데이터도 일단 수행
-subset_size = int(len(X_train) * 0.1)
-X_train_small = X_train[:subset_size]
-y_train_small = y_train[:subset_size]
-
-early_stop = EarlyStopping(monitor='val_loss', patience=2, restore_best_weights=True)
-
-def evaluate_model(name, y_true, y_pred):
-    mse_list = [mean_squared_error(y_true[:, i], y_pred[:, i]) for i in range(len(sensor_cols))]
-    return pd.DataFrame({'Sensor': sensor_cols, f'{name}_MSE': mse_list})
-
-# GRU
-gru_model = Sequential([
-    GRU(64, input_shape=(X_train.shape[1], X_train.shape[2])),
-    Dense(len(sensor_cols))
-])
-gru_model.compile(optimizer='adam', loss='mse')
-gru_model.fit(X_train_small, y_train_small, validation_split=0.2, epochs=5, batch_size=64, verbose=0)
-gru_y_pred = gru_model.predict(X_test)
-df_gru = evaluate_model('GRU', y_test, gru_y_pred)
-
-# LSTM
-lstm_model = Sequential([
-    LSTM(64, input_shape=(X_train.shape[1], X_train.shape[2])),
-    Dense(len(sensor_cols))
-])
-lstm_model.compile(optimizer='adam', loss='mse')
-lstm_model.fit(X_train_small, y_train_small, validation_split=0.2, epochs=5, batch_size=64, verbose=0)
-lstm_y_pred = lstm_model.predict(X_test)
-df_lstm = evaluate_model('LSTM', y_test, lstm_y_pred)
-
-# BiLSTM
-bilstm_model = Sequential([
-    Bidirectional(LSTM(64), input_shape=(X_train.shape[1], X_train.shape[2])),
-    Dense(len(sensor_cols))
-])
-bilstm_model.compile(optimizer='adam', loss='mse')
-bilstm_model.fit(X_train_small, y_train_small, validation_split=0.2, epochs=5, batch_size=64, verbose=0)
-bilstm_y_pred = bilstm_model.predict(X_test)
-df_bilstm = evaluate_model('BiLSTM', y_test, bilstm_y_pred)
-
-# TCN
-tcn_model = Sequential([
-    Input(shape=(X_train.shape[1], X_train.shape[2])),
-    TCN(nb_filters=32, kernel_size=3, dilations=[1, 2, 4], dropout_rate=0.1),
-    Dense(len(sensor_cols))
-])
-tcn_model.compile(optimizer=Adam(learning_rate=0.001), loss='mse')
-tcn_model.fit(X_train_small, y_train_small, validation_split=0.2, epochs=5, batch_size=64, verbose=0, callbacks=[early_stop])
-tcn_y_pred = tcn_model.predict(X_test)
-df_tcn = evaluate_model('TCN', y_test, tcn_y_pred)
-
-# 1D-CNN
-cnn_model = Sequential([
-    Conv1D(64, kernel_size=3, activation='relu', input_shape=(X_train.shape[1], X_train.shape[2])),
-    GlobalAveragePooling1D(),
-    Dense(len(sensor_cols))
-])
-cnn_model.compile(optimizer='adam', loss='mse')
-cnn_model.fit(X_train_small, y_train_small, validation_split=0.2, epochs=5, batch_size=64, verbose=0)
-cnn_y_pred = cnn_model.predict(X_test)
-df_cnn = evaluate_model('1D_CNN', y_test, cnn_y_pred)
-
-# Transformer
-def transformer_block(inputs, num_heads=2, ff_dim=64, dropout=0.1):
-    attn_output = MultiHeadAttention(num_heads=num_heads, key_dim=inputs.shape[-1])(inputs, inputs)
-    attn_output = Dropout(dropout)(attn_output)
-    out1 = LayerNormalization(epsilon=1e-6)(inputs + attn_output)
-
-    ff_output = Dense(ff_dim, activation='relu')(out1)
-    ff_output = Dense(inputs.shape[-1])(ff_output)
-    ff_output = Dropout(dropout)(ff_output)
-    return LayerNormalization(epsilon=1e-6)(out1 + ff_output)
-
-input_layer = Input(shape=(X_train.shape[1], X_train.shape[2]))
-x = transformer_block(input_layer)
-x = GlobalAveragePooling1D()(x)
-output_layer = Dense(len(sensor_cols))(x)
-
-transformer_model = Model(inputs=input_layer, outputs=output_layer)
-transformer_model.compile(optimizer='adam', loss='mse')
-transformer_model.fit(X_train_small, y_train_small, validation_split=0.2, epochs=5, batch_size=64, verbose=0)
-transformer_y_pred = transformer_model.predict(X_test)
-df_trans = evaluate_model('Transformer', y_test, transformer_y_pred)
-
-# MSE 통합 결과 저장
-mse_all = df_gru.merge(df_lstm, on='Sensor')\
-                .merge(df_bilstm, on='Sensor')\
-                .merge(df_tcn, on='Sensor')\
-                .merge(df_cnn, on='Sensor')\
-                .merge(df_trans, on='Sensor')
-
-model_names = ['GRU', 'LSTM', 'BiLSTM', 'TCN', '1D_CNN', 'Transformer']
-
-mean_mses = {
-    model: mse_all[f'{model}_MSE'].mean()
-    for model in model_names
-}
-sensor_mses = mse_all.to_dict(orient='records')
-
-combined = {
-    "summary": mean_mses,
-    "details": sensor_mses
-}
-
-with open("data/combined_mse.json", "w") as f:
-    json.dump(combined, f, indent=2)
-
 
 # 주요 모델 전체 데이터로 학습 (GRU, BiLSTM, LSTM)
 # 실제 웹 배포 시 모델 학습/평가 등의 코드는 별도 python에서 수행 후 선정된 모델의 코드만 남기면 될듯
@@ -313,7 +203,6 @@ gru_metric_output = {
 with open("data/gru_metrics.json", "w", encoding="utf-8") as f:
     json.dump(gru_metric_output, f, indent=2, ensure_ascii=False)
 
-# 예측 트렌드 저장 (GRU+KNN 보정) - test구간 이후 시점 포함
 window_bank, next_step_bank = [], []
 train_arr = train_data[sensor_cols].values
 for i in range(len(train_arr) - 60 - 1):
@@ -324,8 +213,8 @@ next_step_bank = np.array(next_step_bank)
 knn_model = NearestNeighbors(n_neighbors=3).fit(window_bank)
 
 X_init = train_arr[-60:]
-gru_first_pred = model.predict(X_init.reshape(1, 60, len(sensor_cols)))
-gru_test_pred = model.predict(X_test)
+gru_first_pred = gru_trend_model.predict(X_init.reshape(1, 60, len(sensor_cols)))
+gru_test_pred = gru_trend_model.predict(X_test)
 gru_pred_full = np.vstack([gru_first_pred, gru_test_pred])
 
 future_steps = 10080
@@ -333,7 +222,7 @@ future_preds = np.empty((future_steps, len(sensor_cols)))
 last_input = X_test[-1:].copy()
 
 for step in range(future_steps):
-    pred = model.predict(last_input, verbose=0)[0]
+    pred = gru_trend_model.predict(last_input, verbose=0)[0]
 
     query = last_input.reshape(1, -1)
     indices = knn_model.kneighbors(query, return_distance=False)

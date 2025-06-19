@@ -134,21 +134,21 @@ Web Frontend는 Vue.js 기반으로 작성되었으며, 센서 데이터 시각�
 
 **2. 고장 분류 예측 결과 시각화**
 
-- /api/prediction-svg: 4개 모델 (XGBoost, LightGBM, 1D-CNN, LSTM)의 예측값을 timestamp 기반 라인그래프로 시각화
+- /api/prediction-svg: 4개 모델 (XGBoost, LightGBM, 1D-CNN, LSTM)의 예측값을 라인그래프로 시각화
 - /api/f1-score-svg: 모델별 F1-score heatmap 시각화
-- /api/model-metrics-summary: 각 모델의 평균 MSE, MAE, R² 비교 결과 반환 (.json)
+- /api/model-metrics-summary: 각 모델의 평균 MSE, MAE, R² 비교 결과 (.json)
 
 **3. 시계열 예측 및 시각화**
 
-- /api/gru-plot: 특정 센서 이름(sensor)을 기준으로 GRU 모델 예측 결과 반환
-- /api/gru-metrics: 해당 센서의 R² 기반 신뢰도 점수(%) 반환
+- /api/gru-plot: 특정 센서 이름(sensor)을 기준으로 GRU 모델 예측 결과
+- /api/gru-metrics: 해당 센서의 R² 기반 신뢰도 점수(%)
 - /api/future-recovering: 미래 예측 recovering 시점 반환 (학습 데이터 이후 시점 기준)
 
 **4. 클러스터 기반 고장 유형 분석**
 
-- /api/tsne-cluster-plot: KMeans / GMM 클러스터링 결과를 t-SNE 임베딩하여 2D 시각화 (각 클러스터 개수별 plot 포함)
-- /api/kmeans-cluster-summary: 테스트 데이터 중 이상으로 분류된 고장 케이스 요약 정보 반환 (클러스터, 시점, 비율 등)
-- /api/clustering-metrics-summary: 클러스터링 품질 지표 (Silhouette, Davies-Bouldin Index) 비교 결과 반환
+- /api/tsne-cluster-plot: KMeans / GMM 클러스터링 결과를 t-SNE 임베딩하여 2D 시각화 (클러스터 개수별 plot)
+- /api/kmeans-cluster-summary: 테스트 데이터 중 이상으로 분류된 고장 케이스 요약 정보 (클러스터, 시점, 비율 등)
+- /api/clustering-metrics-summary: 클러스터링 품질 지표 (Silhouette, Davies-Bouldin Index) 비교 결과
 
 ## Local 환경 내 실행 방법
 
