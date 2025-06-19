@@ -213,6 +213,7 @@ test_data = data.iloc[split_idx:]
             <div v-if="expandedIndex === 8" class="detail" v-highlight>
               <p>• 시간적 패턴 학습 기반 상태 예측을 위한 슬라이딩 윈도우 생성</p>
               <p>• 센서 데이터를 입력(X), 이후 시점의 설비 상태를 라벨(y)로 구성</p>
+              <p>• Train/Test 데이터 60개를 기반으로 다음 시점의 설비 상태를 예측하는 구조</p>
               <pre><code class="language-python">def create_windows_fast(data, window_size=60, step=1, label_col='machine_status_encoded'):
     sensor_cols = [col for col in data.columns if col.startswith('sensor')]
     sensor_data = data[sensor_cols].to_numpy(dtype=np.float32)
@@ -242,6 +243,7 @@ X_test, y_test = create_windows_fast(test_data)</code></pre>
             <div v-if="expandedIndex === 9" class="detail" v-highlight>
               <p>• 센서 데이터의 미래 값을 예측하기 위한 슬라이딩 윈도우 생성</p>
               <p>• 일정 구간의 센서 데이터를 입력(X), 다음 시점의 센서 값을 라벨(y)로 구성</p>
+              <p>• Train/Test 데이터 60개를 기반으로 61번째 값을 예측하는 구조</p>
               <pre><code class="language-python">def create_sensor_trend_windows(data, sensor_cols, window_size=60, step=1):
     sensor_data = data[sensor_cols].to_numpy(dtype=np.float32)
     num_windows = (len(sensor_data) - window_size) // step
@@ -268,6 +270,7 @@ X_test, y_test = create_sensor_trend_windows(test_data, sensor_cols)</code></pre
             <div v-if="expandedIndex === 10" class="detail" v-highlight>
               <p>• 고장 패턴을 분류하기 위한 슬라이딩 윈도우 생성</p>
               <p>• 고장 직전 정상 데이터를 입력(X), 고장 시점의 센서 값을 라벨(y)로 구성</p>
+              <p>• 고장 직전 N개의 정상 데이터를 추출하고, 고장 발생 시점까지 포함하여 고장 징후 구간을 구성하는 구조</p>
               <pre><code class="language-python">def extract_pre_failure_windows(broken_times, df, window=10):
     segments = []
     used_broken_times = []

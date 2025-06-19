@@ -1,0 +1,22 @@
+# 데이터 처리
+numpy
+pandas
+
+# 시각화
+matplotlib
+seaborn
+
+# 머신러닝 및 딥러닝
+scikit-learn
+xgboost
+lightgbm
+tensorflow
+keras-tcn
+
+# 웹 프레임워크
+fastapi
+uvicorn
+python-multipart
+
+# 기타
+ipython

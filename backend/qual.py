@@ -5,6 +5,7 @@ import random
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import NearestNeighbors
 from sklearn.metrics import mean_squared_error, classification_report, confusion_matrix, ConfusionMatrixDisplay
 import xgboost as xgb
 import lightgbm as lgb
@@ -249,9 +250,9 @@ lstm_trend_model.save("data/lstm_trend_model.h5")
 
 # GRU, BiLSTM, LSTM 학습 평가
 models_info = {
-    "GRU": "gru_trend_model.h5",
-    "LSTM": "lstm_trend_model.h5",
-    "BiLSTM": "bilstm_trend_model.h5"
+    "GRU": "data/gru_trend_model.h5",
+    "LSTM": "data/lstm_trend_model.h5",
+    "BiLSTM": "data/bilstm_trend_model.h5"
 }
 
 all_metrics = {}
@@ -309,41 +310,49 @@ gru_metric_output = {
     "details": gru_df.to_dict(orient="records")
 }
 
-with open("data/gru_metric.json", "w", encoding="utf-8") as f:
+with open("data/gru_metrics.json", "w", encoding="utf-8") as f:
     json.dump(gru_metric_output, f, indent=2, ensure_ascii=False)
 
-# 예측 트렌드 저장 (GRU) - test구간 이후 시점 포함
-gru_trend_model = load_model("data/gru_trend_model.h5", compile=False)
+# 예측 트렌드 저장 (GRU+KNN 보정) - test구간 이후 시점 포함
+window_bank, next_step_bank = [], []
+train_arr = train_data[sensor_cols].values
+for i in range(len(train_arr) - 60 - 1):
+    window_bank.append(train_arr[i:i+60].flatten())
+    next_step_bank.append(train_arr[i+60])
+window_bank = np.array(window_bank)
+next_step_bank = np.array(next_step_bank)
+knn_model = NearestNeighbors(n_neighbors=3).fit(window_bank)
 
-X_init = train_data[sensor_cols].values[-60:]
-X_window = X_init.copy()
-
-gru_first_y_pred = gru_trend_model.predict(X_window.reshape(1, 60, len(sensor_cols)))
-gru_y_pred_rest = gru_trend_model.predict(X_test)
-gru_y_pred_full = np.vstack([gru_first_y_pred, gru_y_pred_rest])
+X_init = train_arr[-60:]
+gru_first_pred = model.predict(X_init.reshape(1, 60, len(sensor_cols)))
+gru_test_pred = model.predict(X_test)
+gru_pred_full = np.vstack([gru_first_pred, gru_test_pred])
 
 future_steps = 10080
-
-future_preds = []
+future_preds = np.empty((future_steps, len(sensor_cols)))
 last_input = X_test[-1:].copy()
 
-for _ in range(future_steps):
-    pred = gru_trend_model.predict(last_input)
-    future_preds.append(pred[0])
-    last_input = np.append(last_input[:, 1:, :], pred.reshape(1, 1, -1), axis=1)
-future_preds = np.array(future_preds)
+for step in range(future_steps):
+    pred = model.predict(last_input, verbose=0)[0]
+
+    query = last_input.reshape(1, -1)
+    indices = knn_model.kneighbors(query, return_distance=False)
+    similar_nexts = next_step_bank[indices[0]]
+
+    corrected = (pred + np.mean(similar_nexts, axis=0)) / 2
+    future_preds[step] = corrected
+
+    last_input = np.concatenate([last_input[:, 1:, :], corrected.reshape(1, 1, -1)], axis=1)
 
 train_values_orig = scaler.inverse_transform(train_data[sensor_cols].values)
-y_pred_orig = scaler.inverse_transform(gru_y_pred_full)
-future_pred_orig = scaler.inverse_transform(future_preds)
 y_test_orig = scaler.inverse_transform(y_test)
+y_pred_orig = scaler.inverse_transform(gru_pred_full)
+future_pred_orig  = scaler.inverse_transform(future_preds)
 
 time_gap = test_data.index[1] - test_data.index[0]
-first_pred_time = train_data.index[-1] + time_gap
-pred_timestamps = [first_pred_time + i * time_gap for i in range(len(gru_y_pred_full))]
-
-last_pred_time = pred_timestamps[-1] + time_gap
-future_timestamps = [last_pred_time + i * time_gap for i in range(future_steps)]
+start_time = train_data.index[-1] + time_gap
+pred_timestamps = [start_time + i * time_gap for i in range(len(y_pred_orig))]
+future_timestamps = [pred_timestamps[-1] + (i+1)*time_gap for i in range(future_steps)]
 
 results = []
 for i, sensor in enumerate(sensor_cols):

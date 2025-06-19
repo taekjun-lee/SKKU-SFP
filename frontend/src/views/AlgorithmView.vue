@@ -27,8 +27,9 @@
 
     <div v-if="activeView === 'tab1'" class="tab1-container">
       <h2>고장 시점 예측</h2>
+      <p>• 총 4가지(XGBoost, LightGBM, 1D-CNN, LSTM) 모델을 비교</p>
       <p>• 설비 상태 분류를 위해 <a>해석력과 속도에 강점을 가진 트리 모델</a>과 <a>시계열 패턴 학습에 특화된</a> 딥러닝 모델을 균형 있게 선정</p>
-        <p>• 총 4가지(XGBoost, LightGBM, 1D-CNN, LSTM) 모델을 비교</p>
+      <p>• 현재 모델에서는 Test Data의 값을 기반으로 설비 상태를 예측하였으나, <a>미래 품질 예측 데이터</a>를 기반으로 상태를 예측할 경우 미래 고장을 대비할 수 있을 것으로 판단</p>
         <div class="toggles">
           <div class="toggle-item" :class="{ expanded: expandedIndex === 0 }">
             <p @click="toggleDetail(0)">
@@ -100,8 +101,10 @@ y_pred = xgb_model.predict(X_test.reshape(X_test.shape[0], -1))</code></pre>
 
     <div v-else-if="activeView === 'tab2'" class="tab2-container">
       <h2>미래 품질 예측</h2>
-      <p>• 트렌드 예측을 위해 <a>속도와 병렬 처리에 강점이 있는 모델</a>과 <a>장기 의존성 및 복잡한 시계열 구조 학습에 강점</a>을 가진 모델군 선정</p>
       <p>• 총 6가지(GRU, BiLSTM, LSTM, 1D-CNN, TCN, Transformer) 모델을 비교</p>
+      <p>• 트렌드 예측을 위해 <a>속도와 병렬 처리에 강점이 있는 모델</a>과 <a>장기 의존성 및 복잡한 시계열 구조 학습에 강점</a>을 가진 모델군 선정</p>
+      <p>• 원본 데이터 이후 기간은 예측 데이터 60개를 기반으로 61번째 값을 예측하며 <a>GRU만 단독으로 사용 할 경우 오차가 누적되는 한계</a> 존재</p>
+      <p>• 이를 극복하지 위해 KNN 기반의 유사 시계열 보정 기법을 적용하여 장기 예측의 안정성과 신뢰도를 향상</p>
       <div class="toggles">
         <div class="toggle-item" :class="{ expanded: expandedIndex === 3 }">
           <p @click="toggleDetail(3)">
@@ -150,7 +153,8 @@ y_pred = xgb_model.predict(X_test.reshape(X_test.shape[0], -1))</code></pre>
             <p>• [early_stop] 시간 절약 및 일반화 성능 향상을 위해 검증 손실이 향상되지 않으면 학습 조기 종료</p>
             <div>
               <div>
-                <pre><code class="language-python">gru_trend_model = Sequential([
+                <pre><code class="language-python"># GRU 학습
+gru_trend_model = Sequential([
     GRU(128, input_shape=(X_train.shape[1], X_train.shape[2])),
     Dense(len(sensor_cols))
 ])
@@ -165,7 +169,17 @@ gru_trend_model.fit(
     batch_size=128,
     callbacks=[early_stop],
     verbose=1
-)</code></pre>
+)
+# KNN 유사 구간 생성 및 학습
+window_bank, next_step_bank = [], []
+train_arr = train_data[sensor_cols].values
+for i in range(len(train_arr) - 60 - 1):
+    window_bank.append(train_arr[i:i+60].flatten())
+    next_step_bank.append(train_arr[i+60])
+window_bank = np.array(window_bank)
+next_step_bank = np.array(next_step_bank)
+
+knn_model = NearestNeighbors(n_neighbors=3).fit(window_bank)</code></pre>
               </div>
             </div>
           </div>
